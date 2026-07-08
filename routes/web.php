@@ -13,16 +13,19 @@ use App\Http\Controllers\StudentController;
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'role.student'])->prefix('student')->name('student.')->group(function () {
+Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
     Route::post('/attendance/mark', [StudentController::class, 'markAttendance'])->name('attendance.mark');
+    Route::post('/attendance/checkout', [StudentController::class, 'checkOut'])->name('attendance.checkout');
     Route::post('/leave/submit', [StudentController::class, 'submitLeave'])->name('leave.submit');
     Route::post('/task/{task}/response', [StudentController::class, 'submitTaskResponse'])->name('task.response');
 });
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 
-Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::patch('/leave/{leave}/status', [AdminController::class, 'updateLeaveStatus'])->name('leave.status');
     
@@ -35,6 +38,13 @@ Route::middleware(['auth', 'role.admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/task/{task}/status', [AdminController::class, 'updateTaskStatus'])->name('task.status');
 
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+
+    // Roles and Permissions Routes
+    Route::resource('roles', RoleController::class)->except(['create', 'edit', 'show']);
+
+    // User Management Routes
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.role.update');
 });
 
 Route::middleware('auth')->group(function () {

@@ -19,10 +19,34 @@ class StudentController extends Controller
         $leaves = $user->leaves()->orderBy('created_at', 'desc')->take(5)->get();
         $tasks = $user->tasksAssignedToMe()->orderBy('due_date', 'asc')->get();
 
-        return view('student.dashboard', compact('attendances', 'todayAttendance', 'leaves', 'tasks'));
+        // Calculate monthly stats
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $today = Carbon::today();
+        
+        // Simple business days calculation (Monday - Friday) up to today
+        $totalDays = 0;
+        $current = $startOfMonth->copy();
+        while ($current->lte($today)) {
+            if (!$current->isWeekend()) {
+                $totalDays++;
+            }
+            $current->addDay();
+        }
+
+        $presentDays = $user->attendances()
+                            ->whereBetween('date', [$startOfMonth, $today])
+                            ->count();
+                            
+        $absentDays = max(0, $totalDays - $presentDays);
+        $attendanceRate = $totalDays > 0 ? round(($presentDays / $totalDays) * 100) : 0;
+
+        return view('student.dashboard', compact(
+            'attendances', 'todayAttendance', 'leaves', 'tasks',
+            'totalDays', 'presentDays', 'absentDays', 'attendanceRate'
+        ));
     }
 
-    public function markAttendance(Request $request)
+    public function markAttendance(Request $request, \App\Services\WhatsAppService $whatsapp)
     {
         $user = Auth::user();
         $today = Carbon::today();
@@ -32,14 +56,39 @@ class StudentController extends Controller
             return back()->with('error', 'Attendance already marked for today.');
         }
 
-        Attendance::create([
+        $attendance = Attendance::create([
             'user_id' => $user->id,
             'date' => $today,
             'check_in' => Carbon::now(),
             'status' => 'present',
         ]);
+        
+        $phone = $user->whatsapp_number ?? $user->phone ?? '+1234567890';
+        $whatsapp->sendMessage($phone, "Hello {$user->name}, your attendance for today (" . $today->format('Y-m-d') . ") has been marked successfully at " . Carbon::now()->format('H:i') . ".");
 
         return back()->with('success', 'Attendance marked successfully!');
+    }
+
+    public function checkOut(Request $request)
+    {
+        $user = Auth::user();
+        $today = Carbon::today();
+
+        $attendance = $user->attendances()->where('date', $today)->first();
+
+        if (!$attendance) {
+            return back()->with('error', 'You have not checked in today.');
+        }
+
+        if ($attendance->check_out) {
+            return back()->with('error', 'You have already checked out today.');
+        }
+
+        $attendance->update([
+            'check_out' => Carbon::now(),
+        ]);
+
+        return back()->with('success', 'Checked out successfully!');
     }
 
     public function submitLeave(Request $request, \App\Services\WhatsAppService $whatsapp)
@@ -59,7 +108,7 @@ class StudentController extends Controller
         ]);
 
         $user = Auth::user();
-        $phone = $user->phone ?? '+1234567890';
+        $phone = $user->whatsapp_number ?? $user->phone ?? '+1234567890';
         $whatsapp->sendMessage($phone, "Hello {$user->name}, your leave request from {$leave->start_date} to {$leave->end_date} has been submitted and is pending review.");
 
         return back()->with('success', 'Leave request submitted successfully.');

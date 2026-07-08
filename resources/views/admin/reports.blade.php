@@ -53,6 +53,42 @@
                 </div>
             </div>
 
+            <!-- Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Present Count -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="bg-emerald-50 p-4 rounded-xl text-emerald-500">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Present</p>
+                        <p class="text-3xl font-extrabold text-slate-800">{{ $presentCount }}</p>
+                    </div>
+                </div>
+
+                <!-- Absent Count -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="bg-red-50 p-4 rounded-xl text-red-400">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Absent</p>
+                        <p class="text-3xl font-extrabold text-slate-800">{{ $absentCount }}</p>
+                    </div>
+                </div>
+
+                <!-- Leave Count -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="bg-amber-50 p-4 rounded-xl text-amber-500">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-500 uppercase tracking-wider">Approved Leave</p>
+                        <p class="text-3xl font-extrabold text-slate-800">{{ $leaveDaysCount }} <span class="text-sm font-semibold text-slate-400">Days</span></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Report Results -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-brand/20">
                 <div class="p-6">

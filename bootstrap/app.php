@@ -12,10 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role.admin' => \App\Http\Middleware\EnsureAdmin::class,
-            'role.hr' => \App\Http\Middleware\EnsureHR::class,
-            'role.teacher' => \App\Http\Middleware\EnsureTeacher::class,
-            'role.student' => \App\Http\Middleware\EnsureStudent::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

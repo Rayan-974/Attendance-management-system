@@ -17,7 +17,7 @@ class AdminController extends Controller
         $currentYear = Carbon::now()->year;
 
         // Fetch students calculating present/absent counts FOR THE CURRENT MONTH
-        $students = User::where('role', 'student')
+        $students = User::role('student')
             ->withCount([
                 'attendances as present_count' => function ($query) use ($currentMonth, $currentYear) {
                     $query->where('status', 'present')
@@ -96,7 +96,7 @@ class AdminController extends Controller
 
     public function createTask()
     {
-        $students = User::where('role', 'student')->get();
+        $students = User::role('student')->get();
         return view('admin.task-create', compact('students'));
     }
 
@@ -119,7 +119,7 @@ class AdminController extends Controller
         ]);
 
         $student = User::find($request->assigned_to);
-        $phone = $student->phone ?? '+1234567890';
+        $phone = $student->whatsapp_number ?? $student->phone ?? '+1234567890';
         $whatsapp->sendMessage($phone, "Hello {$student->name}, a new task '{$task->title}' has been assigned to you. Due date: {$task->due_date}.");
 
         return redirect()->route('admin.dashboard')->with('success', 'Task assigned successfully.');
@@ -132,7 +132,7 @@ class AdminController extends Controller
 
         $student = $task->assignee;
         if ($student) {
-            $phone = $student->phone ?? '+1234567890';
+            $phone = $student->whatsapp_number ?? $student->phone ?? '+1234567890';
             $whatsapp->sendMessage($phone, "Hello {$student->name}, your submission for task '{$task->title}' has been {$request->status}.");
         }
 

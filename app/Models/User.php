@@ -6,17 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasRoles, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'phone',
+        'whatsapp_number',
         'password',
-        'role',
         'profile_photo_path',
     ];
 
@@ -55,10 +56,10 @@ class User extends Authenticatable
     }
     
     // RBAC Helpers
-    public function isAdmin(): bool { return $this->role === 'admin'; }
-    public function isHR(): bool { return $this->role === 'hr'; }
-    public function isTeacher(): bool { return $this->role === 'teacher'; }
-    public function isStudent(): bool { return $this->role === 'student'; }
+    public function isAdmin(): bool { return $this->hasRole('admin'); }
+    public function isHR(): bool { return $this->hasRole('hr'); }
+    public function isTeacher(): bool { return $this->hasRole('teacher'); }
+    public function isStudent(): bool { return $this->hasRole('student'); }
 
     public function getProfilePhotoUrlAttribute(): string
     {
@@ -70,5 +71,13 @@ class User extends Authenticatable
     protected function defaultProfilePhotoUrl(): string
     {
         return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&color=7F9CF5&background=EBF4FF';
+    }
+
+    /**
+     * Send the password reset notification.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\QueuedPasswordReset($token));
     }
 }

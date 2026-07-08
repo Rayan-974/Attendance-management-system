@@ -8,36 +8,47 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppService
 {
     /**
-     * Send a WhatsApp message to a given phone number.
+     * Send a WhatsApp message to a given phone number using Meta Cloud API.
      * 
-     * @param string $phone
-     * @param string $message
+     * @param string $phone The recipient's phone number (e.g. 1234567890, no plus sign for Meta API)
+     * @param string $message The message body
      * @return bool
      */
     public function sendMessage(string $phone, string $message): bool
     {
-        // For demonstration and local development, we simulate the WhatsApp API
-        // by logging the payload to storage/logs/laravel.log. 
-        // In a production environment, you would use Http::post() to hit 
-        // your WhatsApp provider's API (e.g., Twilio, UltraMsg).
-        
-        /* 
-        Example API Call Integration:
-        $response = Http::withToken(env('WHATSAPP_API_TOKEN'))
-            ->post('https://api.whatsapp.provider.com/messages', [
-                'to' => $phone,
-                'body' => $message,
-            ]);
-        return $response->successful();
-        */
+        $token = env('WHATSAPP_TOKEN');
+        $phoneNumberId = env('WHATSAPP_PHONE_NUMBER_ID');
 
-        // Log the simulation
-        Log::channel('single')->info("WhatsApp Notification Dispatched", [
-            'to' => $phone,
-            'message' => $message,
-            'status' => 'Simulated Delivery'
-        ]);
-        
-        return true;
+        if (!$token || !$phoneNumberId) {
+            Log::error("WhatsApp Notification Failed: Meta credentials not found in .env");
+            return false;
+        }
+
+        // Clean phone number: Meta API requires the phone number without the '+' sign
+        $cleanPhone = ltrim($phone, '+');
+
+        $url = "https://graph.facebook.com/v19.0/{$phoneNumberId}/messages";
+
+        try {
+            $response = Http::withToken($token)->post($url, [
+                'messaging_product' => 'whatsapp',
+                'to' => $cleanPhone,
+                'type' => 'text',
+                'text' => [
+                    'body' => $message,
+                ]
+            ]);
+
+            if ($response->failed()) {
+                Log::error("WhatsApp Notification Failed: " . $response->body());
+                return false;
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("WhatsApp Notification Failed: " . $e->getMessage());
+            return false;
+        }
     }
 }
