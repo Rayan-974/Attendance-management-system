@@ -161,4 +161,4 @@ This project is licensed under the MIT License.
 ---
 
 ## 👤 Author
-Built and maintained by **Rayan** — Software Engineering student & Applied AI Product Engineer in training.
+Built and maintained by **Rayan** — Software Engineer
