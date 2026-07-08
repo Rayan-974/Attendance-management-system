@@ -1,59 +1,164 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📚 Attendance Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A full-featured, role-based **Attendance Management System** built with Laravel 11, featuring enterprise-grade access control, real-time WhatsApp notifications via the official Meta Cloud API, and a secure, production-ready session architecture.
 
-## About Laravel
+![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?style=flat&logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat&logo=php)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-active-success.svg)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📖 Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+This system manages attendance, tasks, and leave requests across four distinct user roles — **Admin, HR, Teacher, and Student** — with automated WhatsApp notifications keeping students informed at every step of their academic lifecycle.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## ✨ Key Features
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 🔐 Role-Based Access Control (RBAC)
+Built on the [Spatie Laravel-Permission](https://spatie.be/docs/laravel-permission) package for granular, database-driven authorization.
 
-## Laravel Sponsors
+- Four hierarchical roles: `Admin`, `HR`, `Teacher`, `Student`
+- Legacy hardcoded `role` column fully removed in favor of dedicated roles & permissions tables
+- Centralized authorization checks using `hasRole()` and `can()` throughout the app
+- Smart routing: `DashboardController` automatically redirects each user to their secured portal (`/admin/dashboard`, `/student/dashboard`, etc.) based on their assigned role
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 💬 Real-Time WhatsApp Notifications (Meta Cloud API)
+Fully automated messaging powered directly by Meta's official WhatsApp Business Cloud API — no third-party providers (e.g., Twilio) required.
 
-### Premium Partners
+| Trigger Event | Notification Sent |
+|---|---|
+| ✅ Attendance Marked | Instant confirmation with timestamp |
+| 📝 Leave Requested | Pending status confirmation |
+| 📌 Task Assigned | Task title & due date |
+| 📊 Task Graded | Approved/Rejected result |
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**Implementation details:**
+- New `whatsapp_number` column added to the `users` table via migration
+- Registration form (`register.blade.php`) updated to capture WhatsApp numbers at sign-up
+- Modular `WhatsAppService` class built on Laravel's `Http` client for clean, reusable message dispatching
+- Meta API credentials (Access Token, Phone Number ID) managed securely via `.env`
 
-## Contributing
+### 🛠️ System Stability & Bug Fixes
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**"419 Page Expired" (CSRF Token Mismatch)**
+- **Cause:** Session tokens fell out of sync between the database and browser cookies across server restarts
+- **Fix:** Switched `SESSION_DRIVER` to `cookie`, storing encrypted session state directly in the browser and eliminating filesystem/database sync issues
 
-## Code of Conduct
+**"403 Forbidden" (Broken Admin Routing)**
+- **Cause:** Legacy routing logic still referenced the deleted `role` column, misidentifying Admins as Students
+- **Fix:** Refactored the `isAdmin()` helper in the `User` model to check Spatie roles/permissions correctly
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 🧱 Tech Stack
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Layer | Technology |
+|---|---|
+| **Framework** | Laravel 11 (PHP) |
+| **Frontend** | Laravel Breeze — Blade Templates + Tailwind CSS |
+| **Database** | MySQL |
+| **Authorization** | Spatie Laravel-Permission |
+| **Messaging** | Meta Graph API (WhatsApp Business Cloud API) |
+| **Sessions & Security** | Cookie-based Sessions, CSRF Protection |
+| **Rich Text** | CKEditor (task management) |
+| **Local Environment** | XAMPP |
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔄 How It Works
+
+**Login & Routing**
+1. User logs in → `DashboardController` intercepts the request
+2. Assigned Spatie role is evaluated
+3. User is redirected to their role-specific dashboard
+
+**Notification Lifecycle**
+1. A triggering action occurs (attendance marked, leave requested, task assigned/graded)
+2. `WhatsAppService` builds and dispatches the message via the Meta Cloud API
+3. The student receives a real-time WhatsApp notification
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- PHP >= 8.2
+- Composer
+- MySQL
+- Node.js & npm
+- A Meta Developer account with WhatsApp Business API access
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/attendance-management-system.git
+cd attendance-management-system
+
+# Install PHP dependencies
+composer install
+
+# Install frontend dependencies
+npm install && npm run build
+
+# Copy environment file
+cp .env.example .env
+php artisan key:generate
+
+# Configure your database and Meta API credentials in .env
+# DB_DATABASE, DB_USERNAME, DB_PASSWORD
+# WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID
+
+# Run migrations and seeders
+php artisan migrate --seed
+
+# Serve the application
+php artisan serve
+```
+
+### Environment Variables
+
+```env
+SESSION_DRIVER=cookie
+
+WHATSAPP_ACCESS_TOKEN=your_meta_access_token
+WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
+```
+
+---
+
+## 📂 Project Structure (Key Files)
+
+```
+app/
+├── Http/Controllers/
+│   └── DashboardController.php     # Role-based routing logic
+├── Models/
+│   └── User.php                    # hasRole()/can() checks, isAdmin() helper
+├── Services/
+│   └── WhatsAppService.php         # Meta Cloud API message dispatch
+resources/views/auth/
+│   └── register.blade.php          # WhatsApp number capture
+database/migrations/
+│   └── ..._add_whatsapp_number_to_users_table.php
+```
+
+---
+
+## 🗺️ Roadmap
+- [ ] Email notification fallback for undelivered WhatsApp messages
+- [ ] Admin analytics dashboard for attendance trends
+- [ ] Mobile app companion (Flutter)
+
+---
+
+## 📄 License
+This project is licensed under the MIT License.
+
+---
+
+## 👤 Author
+Built and maintained by **Rayan** — Software Engineering student & Applied AI Product Engineer in training.
